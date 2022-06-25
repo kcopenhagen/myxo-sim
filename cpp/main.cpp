@@ -13,6 +13,7 @@ using namespace C;
 int main(){
 
 	srand(time(NULL));
+	time_t t1 = clock();
 	// Create output folder for data.
 	char buffer[50];
 	int i = 0;
@@ -25,7 +26,25 @@ int main(){
 	while (mkdir(buffer, 0777)!=0);
 
 	cout << "Saving to directory: " << buffer << endl;
+
+	// Copy parameters file into Simulation directory.
+	string line;
+	ifstream ini_file {"parameters.h"};
 	
+	char buffer2[50];
+	sprintf(buffer2,"%sparameters.h",buffer);
+	ofstream out_file {buffer2};
+	if (ini_file && out_file) {
+		while (getline(ini_file,line)) {
+			out_file << line << "\n";
+		}
+		cout << "Copy Finished" << endl;
+	} else 
+		cout << "Error copying parameters file." << endl;
+	ini_file.close();
+	out_file.close();
+
+
 	sprintf(buffer,"%sframes/",buffer);
 	mkdir(buffer, 0777);
 
@@ -51,6 +70,10 @@ int main(){
 		// Up date cell forces.
 		for (i=0; i<cells.size(); i++) {
 			cells[i].self_prop_force();
+			cells[i].bead_spacing();
+			vector<cell> otherCells = cells;
+			otherCells.erase(otherCells.begin()+i);
+			cells[i].repulsion_force(otherCells);
 		}
 
 		// Move cells.
@@ -65,5 +88,7 @@ int main(){
 
 
 	}
+	cout << "Elapsed time: " << 1 / 60 * (clock() - t1)/double(CLOCKS_PER_SEC) \
+		<< "minutes." << endl;
 	return 0;
 }

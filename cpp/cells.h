@@ -37,10 +37,15 @@ namespace C
 			// Reset all bead forces to zero.
 			void reset_forces();
 
-			// Add self propulsion force to each bead.
+			// Add forces to each bead.
 			void self_prop_force();
+			void repulsion_force(vector<cell> cells);
 
 			// Move beads.
 			void move_beads();
+			void bead_spacing();
+
+			// Check force magnitude
+			double max_force();
 	};
 }

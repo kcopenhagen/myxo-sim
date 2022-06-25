@@ -9,10 +9,21 @@ using namespace std;
 
 vector<cell> initialize_cells(){
 	vector<cell> cells;
-	for (int i=0; i<maxN; i++) {
+	int fails = 0;
+	while (cells.size() < maxN) {
 		cell temp;
-		cells.push_back(temp);
+		temp.repulsion_force(cells);
+		if (abs(temp.max_force()) < 0.00001) {
+			temp.reset_forces();
+			cells.push_back(temp);
+		} else
+			fails++;
+
+		if (fails > 10000)
+		       break;	
+	
 	}
+	cout << "Simulating: " << cells.size() << " cells." << endl;
 	return cells;
 }
 
