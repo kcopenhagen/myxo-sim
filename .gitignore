@@ -1,1 +1,2 @@
-cpp/Sim*/
+*.log
+temp/
