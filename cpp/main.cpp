@@ -16,9 +16,9 @@ int main(){
 	// Create output folder for data.
 	char buffer[50];
 	int i = 0;
-	sprintf(buffer,"Sim%06d/",i);
+	sprintf(buffer,"../temp/Sim%06d/",i);
 	do {
-		sprintf(buffer, "Sim%06d/",i);
+		sprintf(buffer, "../temp/Sim%06d/",i);
 		i++;
 		cout << "Creating directory: " << buffer << endl;
 	}
