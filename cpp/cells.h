@@ -2,6 +2,7 @@
 #pragma once
 #include <vector>
 #include "parameters.h"
+// #include "waters.cpp"
 
 using namespace std;
 namespace C
@@ -27,8 +28,8 @@ namespace C
 		// 		i = bead in current cell.
 		// 		c = neighboring cell.
 		// 		k = bead in neighboring cell.
-		int nList[maxN];
-		int nns;
+		vector <int> nList;
+		vector <int> wnList;
 		int maxns;
 		vector <vector <vector <int>>> tList;
 
@@ -49,14 +50,15 @@ namespace C
 			inline int get_nBeads() { return nBeads; }
 			inline vector <vector <vector <int>>> get_tList() \
 				{ return tList; }
-			inline int *get_nList() { return nList; }
-			inline int get_nns() { return nns; }
+			inline vector<int> get_nList() { return nList; }
+			inline vector<int> get_wnList() { return wnList; }
 			inline int get_maxns() { return maxns; }
 
 			inline void set_x(vector<double> xt) { x = xt; }
 			inline void set_y(vector<double> yt) { y = yt; }
 			inline void set_z(vector<double> zt) { z = zt; }
 			inline void set_id(int idt) { id = idt; }
+			inline void set_wnList(vector<int> wnt) { wnList = wnt; }
 
 			// Calculate neighbor and touching lists.
 			void neighbor_list(vector<cell> cells);
@@ -69,7 +71,7 @@ namespace C
 			// Add forces to each bead.
 			void self_prop_force();
 			void add_forces(int i, double fxt, double fyt, double fzt);
-			void surface_tension();
+			void surface_tension_g();
 			void gel_force();
 
 			// Move beads.

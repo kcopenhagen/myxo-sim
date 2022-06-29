@@ -6,16 +6,17 @@
 #include <stdio.h>
 
 #include "cells.h"
+// #include "waters.cpp"
 #include "parameters.h"
 #include "functions.cpp"
 
 using namespace std;
 using namespace C;
+using namespace W;
 
 void cell::neighbor_list(vector<cell> cells) {
 	// Calculate neighbor lists, all cells with at least 1 bead\
 	//      within neighRadius of the current cell.
-	nns = 0;
 
 	for (int i=0; i < x.size(); i++) {
 		for (int j=0; j<cells.size(); j++) {
@@ -40,14 +41,9 @@ void cell::neighbor_list(vector<cell> cells) {
 					// Check if ID of cell j is already 
 					//     store in nList, if not, add it.
 
-					int nidx = find_in_nList(nList, nns, j);
-					if (nidx==-1) {
-						if (nns < maxN) {
-							nList[nns] = j;
-							nns++;
-						} else
-							cout << "nList too small to store all neighbors." << endl;
-					}
+					int nidx = find_in_nList(nList, nList.size(), j);
+					if (nidx==-1)
+						nList.push_back(j);
 				}
 			}
 		}
@@ -63,7 +59,7 @@ void cell::touch_list(vector<cell> cells) {
 		vector <vector <int> > temp;
 		tList.push_back(temp);
 
-		for (int j=0; j<nns; j++) {
+		for (int j=0; j<nList.size(); j++) {
 			vector <int> temp2;
 			tList[i].push_back(temp2);
 
@@ -204,7 +200,7 @@ void cell::self_prop_force() {
 
 }
 
-void cell::surface_tension() {
+void cell::surface_tension_g() {
 	for (int i = 0; i < fz.size(); i++) {
 		fz[i] = fz[i] - sT;
 	}
@@ -333,6 +329,8 @@ cell::cell () {
 	//    calculated from cell length and beadSpacing.
 	double stX = boxSize*double(rand())/double(RAND_MAX);
 	double stY = boxSize*double(rand())/double(RAND_MAX);
+	stX = boxSize / 2.0;
+	stY = boxSize / 2.0;
 	double stZ = 0.5*double(rand())/double(RAND_MAX)-0.25;
 
 	random_device rd{};
@@ -393,9 +391,6 @@ cell::cell () {
 	x = xs;
 	y = ys;
 	z = zs;
-
-	// Starting empty neighbor lists.
-	nns = 0;
 
 	// Set x, y, and z forces to zero for each bead.
 	reset_forces();

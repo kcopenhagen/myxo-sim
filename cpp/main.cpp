@@ -48,6 +48,7 @@ int main(){
 
 	double tot_n_time = 0;
 	double tot_r_time = 0;
+	double tot_w_time = 0;
 
 	for (int t=0; t < maxT * 60.0; t+=dt) {
 		// Save data to file.
@@ -70,6 +71,9 @@ int main(){
 			
 			for (int c=0; c < cells.size(); c++) {
 				cells[c].neighbor_list(cells);
+				vector<int> wnList;
+				wnList = water_neighbor_list(water_layer, cells[c]);
+				cells[c].set_wnList(wnList);
 			}
 			neighTimer = 0.0;
 		}
@@ -82,8 +86,8 @@ int main(){
 */
 
 		// Calculate forces on water layer.
-	//	water_layer.sinking();
-	//	water_layer.water_springs();
+		water_layer.sinking();
+		water_layer.water_springs();
 
 		// Check for reversals.
 		for (int c=0; c < cells.size(); c++)
@@ -103,7 +107,9 @@ int main(){
 			tot_r_time += clock() - t_r1;
 
 			// Interactions with water layer.
-			//water_interaction(&cells[c], &water_layer);
+			time_t t_w1 = clock();
+			water_interaction_neighs(&cells[c], &water_layer);
+			tot_w_time += clock() - t_w1;
 
 		}
 
@@ -113,18 +119,19 @@ int main(){
 		}
 
 		// Move water.
-		//water_layer.move_beads();
+		water_layer.move_beads();
 		
 		// Reset forces to zero.
 		for (int c=0; c<cells.size(); c++) {
 			cells[c].reset_forces();
 		}
-		//water_layer.reset_forces();
+		water_layer.reset_forces();
 
 
 	}
 	cout << "Time neighboring: " << tot_n_time/double(CLOCKS_PER_SEC) << endl;
 	cout << "Time repelling: " << tot_r_time/double(CLOCKS_PER_SEC) << endl;
+	cout << "Time spent on water: " << tot_w_time/double(CLOCKS_PER_SEC) << endl;
 	cout << "Elapsed time: " << 1.0 / 60.0 * (clock() - t1)/double(CLOCKS_PER_SEC) \
 		<< "minutes." << endl;
 

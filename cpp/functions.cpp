@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace C;
+using namespace W;
 
 vector<cell> initialize_cells() {
 	vector<cell> cells;
@@ -81,8 +82,6 @@ void save_water(string buffer, water water_layer) {
 	vector <double> y = water_layer.get_y();
 	vector <double> z = water_layer.get_z();
 	
-	cout << x[0] << "\t" << y[0] << "\t" << z[0] << endl;
-
 	int nBeads = water_layer.get_nBeads();
 	if (fw.is_open()) {
 		for (int i=0; i<nBeads; i++) {
@@ -103,8 +102,8 @@ int find_cell_idx(vector<cell> cells, int id) {
 	return -1;
 }
 
-int find_in_nList(int *nList, int nns, int id) {
-	for (int i=0; i<nns; i++) { 
+int find_in_nList(vector<int> nList, int nns, int id) {
+	for (int i=0; i<nList.size(); i++) { 
 		if (nList[i] == id)
 			return i;
 	}
