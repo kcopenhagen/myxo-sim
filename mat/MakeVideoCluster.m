@@ -1,15 +1,14 @@
-function makeAllVideo()
+function MakeVideoCluster()
 %%
-    fpath = uigetdir('/Users/kc32/Desktop/mnt/localtigress/myxoSim');    
-    lines = readlines(fullfile(fpath,'parameters.h'));
+    lines = readlines('parameters.h');
 
     k6str = lines(contains(lines,'K6'));
     K6t = regexp(k6str,'\d+\.?\d*','match');
     K6 = str2double(K6t{2});
 
-    files = dir(fullfile(fpath,"frames/"));
+    files = dir("frames/");
     if (K6 > 0.0001)
-        files2 = dir(fullfile(fpath,"water/"));
+        files2 = dir("water/");
     end
     del = [];
     for i = 1:numel(files)
@@ -39,9 +38,9 @@ function makeAllVideo()
     beadRadius = str2double(CR);
 
     if (K6 > 0.0001)
-        v = VideoWriter(fullfile(fpath,'AllVideo.mp4'),'MPEG-4');
+        v = VideoWriter('AllVideo.mp4','MPEG-4');
     else
-        v = VideoWriter(fullfile(fpath,'CellVideo.mp4'),'MPEG-4');
+        v = VideoWriter('CellVideo.mp4','MPEG-4');
     end
 
     v.Quality = 95;
