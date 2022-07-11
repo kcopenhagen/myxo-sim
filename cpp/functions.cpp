@@ -35,6 +35,15 @@ vector<cell> initialize_cells() {
 					double dx = x[i] - xs[k];
 					double dy = y[i] - ys[k];
 					double dz = z[i] - zs[k];
+					if (dx > boxSize / 2.0)
+						dx -= boxSize;
+					else if (dx < -boxSize / 2.0)
+						dx += boxSize;
+					if (dy > boxSize / 2.0)
+						dy -= boxSize;
+					else if (dy < -boxSize / 2.0)
+						dy += boxSize;
+
 					double dr = sqrt(dx * dx + dy * dy \
 							+ dz * dz);
 					if (dr < mindr)
@@ -48,7 +57,6 @@ vector<cell> initialize_cells() {
 			cells[c].set_id(c);
 			c++;
 		} else {
-			cells.pop_back();
 			fails++;
 		}
 

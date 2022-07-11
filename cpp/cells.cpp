@@ -139,7 +139,7 @@ double cell::max_force() {
 	return fmax;
 }
 
-void cell::self_prop_force() {
+void cell::self_prop_force_substrate() {
 	
 	random_device rd{};
 	mt19937 gen{rd()};
@@ -160,41 +160,56 @@ void cell::self_prop_force() {
 	else if (dy < -boxSize / 2.0)
 		dy = dy + boxSize;
 
-	dx = dx + noisevec(gen);
-	dy = dy + noisevec(gen);
-	dz = dz + noisevec(gen);
-
 	double norm = sqrt(dx * dx + dy * dy + dz * dz);
 
-	// Set force of first bead to direction
-	fx[0] = fx[0] + v / 60.0 * dx / norm;
-	fy[0] = fy[0] + v / 60.0 * dy / norm;
-	fz[0] = fz[0] + v / 60.0 * dz / norm;
+	double ndx = noisevec(gen);
+	double ndy = noisevec(gen);
+	double ndz = noisevec(gen);
+	double nnorm = sqrt(ndx * ndx + ndy * ndy + ndz * ndz);
+	while (nnorm > rotDiffSigma) {
+		ndx = noisevec(gen);
+		ndy = noisevec(gen);
+		ndz = noisevec(gen);
+		nnorm = sqrt(ndx * ndx + ndy * ndy + ndz * ndz);
+	}
+
+	dx = v * dx / norm + ndx;
+	dy = v * dy / norm + ndy;
+	dz = v * dz / norm + ndz;
 	
+	// Set force of first bead to direction
+	if (z[0] < 0) {
+		fx[0] = fx[0] + dx;
+		fy[0] = fy[0] + dy;
+		fz[0] = fz[0] + dz;
+	}
+
 	// Set forces of the rest of the beads along connecting lines.
 	for (int i=1; i<x.size(); i++) {
-		double dx = x[i-1] - x[i];
-		double dy = y[i-1] - y[i];
-		double dz = z[i-1] - z[i];
+
+		if (z[i] < beadRadius) {
+			double dx = x[i-1] - x[i];
+			double dy = y[i-1] - y[i];
+			double dz = z[i-1] - z[i];
 		
-		//Preiodic boundaries.
-		if (dx > boxSize/2.0) {
-			dx = dx - boxSize;
-		} else if (dx < -boxSize/2.0) {
-			dx = dx + boxSize;
+			//Preiodic boundaries.
+			if (dx > boxSize/2.0) {
+				dx = dx - boxSize;
+			} else if (dx < -boxSize/2.0) {
+				dx = dx + boxSize;
+			}
+			if (dy > boxSize/2.0) {
+				dy = dy-boxSize;
+			} else if (dy < -boxSize/2.0) {
+				dy = dy+boxSize;
+			}
+			double norm = sqrt(dx * dx + dy * dy + dz * dz);
+	
+			// Convert v from microns / min to microns / sec.
+			fx[i] = fx[i] + v * dx / norm;
+			fy[i] = fy[i] + v * dy / norm;
+			fz[i] = fz[i] + v * dz / norm;
 		}
-		if (dy > boxSize/2.0) {
-			dy = dy-boxSize;
-		} else if (dy < -boxSize/2.0) {
-			dy = dy+boxSize;
-		}
-		double norm = sqrt(dx * dx + dy * dy + dz * dz);
-
-
-		// Convert v from microns / min to microns / sec.
-		fx[i] = fx[i] + v / 60.0 * dx / norm;
-		fy[i] = fy[i] + v / 60.0 * dy / norm;
-		fz[i] = fz[i] + v / 60.0 * dz / norm;
 
 	}
 
@@ -203,6 +218,13 @@ void cell::self_prop_force() {
 void cell::surface_tension_g() {
 	for (int i = 0; i < fz.size(); i++) {
 		fz[i] = fz[i] - sT;
+	}
+}
+
+void cell::surface_tension_k() {
+	for (int i = 0; i < nBeads; i++) {
+		if (z[i] > 0)
+			fz[i] = fz[i] - sT * z[i];
 	}
 }
 
@@ -276,6 +298,14 @@ void cell::cell_shape() {
 			double im1ip1x = x[i + 1] - x[i - 1];
 			double im1ip1y = y[i + 1] - y[i - 1];
 			double im1ip1z = z[i + 1] - z[i - 1];
+			if (im1ip1x > boxSize / 2.0)
+				im1ip1x -= boxSize;
+			else if (im1ip1x < -boxSize / 2.0)
+				im1ip1x += boxSize;
+			if (im1ip1y > boxSize / 2.0)
+				im1ip1y -= boxSize;
+			else if (im1ip1y < -boxSize / 2.0)
+				im1ip1y += boxSize;
 
 			// Vector from bead i to the line connecting i - 1 and i + 1
 			double mag = (im1ix * im1ip1x + im1iy * im1ip1y + \
@@ -315,6 +345,12 @@ void cell::check_reverse(double ct) {
 		revT = revTs(gen);
 		while (revT <= 0)
 			revT = revTs(gen);
+
+		normal_distribution<double> vs(vMu, vSigma);
+		v = vs(gen);
+		while (v < 0)
+			v = vs(gen);
+
 		lastRev = ct;
 	}
 }
@@ -329,9 +365,7 @@ cell::cell () {
 	//    calculated from cell length and beadSpacing.
 	double stX = boxSize*double(rand())/double(RAND_MAX);
 	double stY = boxSize*double(rand())/double(RAND_MAX);
-	stX = boxSize / 2.0;
-	stY = boxSize / 2.0;
-	double stZ = 0.5*double(rand())/double(RAND_MAX)-0.25;
+	double stZ = 0.5 * double(rand())/double(RAND_MAX) - 0.25;
 
 	random_device rd{};
 	mt19937 gen{rd()};
@@ -339,11 +373,6 @@ cell::cell () {
 	// Starting cell direction.
 	double theta = 360.0*double(rand())/double(RAND_MAX);
 	normal_distribution<double> thetas{0.0, 10.0};
-
-	normal_distribution<double> lens{lMu, lSigma};
-	double l = lens(gen);
-	while (l <= 0)
-		l = lens(gen);
 
 	normal_distribution<double> vs{vMu, vSigma};
 	v = vs(gen);
@@ -359,6 +388,10 @@ cell::cell () {
 	lastRev = -double(rand()) / double(RAND_MAX) * revT;
 	
 	//Bead positions and forces.
+	normal_distribution<double> lens{lMu, lSigma};
+	double l = lens(gen);
+	while (l <= 3*beadSpacing)
+		l = lens(gen);
 	nBeads = round(l/beadSpacing);
 	vector<double> xs;
 	vector<double> ys;

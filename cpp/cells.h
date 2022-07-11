@@ -69,9 +69,10 @@ namespace C
 			void reset_forces();
 
 			// Add forces to each bead.
-			void self_prop_force();
+			void self_prop_force_substrate();
 			void add_forces(int i, double fxt, double fyt, double fzt);
 			void surface_tension_g();
+			void surface_tension_k();
 			void gel_force();
 
 			// Move beads.

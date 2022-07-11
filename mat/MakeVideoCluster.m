@@ -1,5 +1,6 @@
 function MakeVideoCluster()
 %%
+    disp('Making video.')
     lines = readlines('parameters.h');
 
     k6str = lines(contains(lines,'K6'));
@@ -38,12 +39,11 @@ function MakeVideoCluster()
     beadRadius = str2double(CR);
 
     if (K6 > 0.0001)
-        v = VideoWriter('AllVideo.mp4','MPEG-4');
+        v = VideoWriter('AllVideo.avi','Motion JPEG AVI');
     else
-        v = VideoWriter('CellVideo.mp4','MPEG-4');
+        v = VideoWriter('CellVideo.avi','Motion JPEG AVI');
     end
 
-    v.Quality = 95;
     v.FrameRate = 30;
     open(v);
 
@@ -66,10 +66,14 @@ function MakeVideoCluster()
     s.AlphaData = [a';a'];
     s.AlphaDataMapping = 'none';
     s.EdgeAlpha = 'flat';
+    p = scatter3(x,y,z,20,z,'filled');
     hold(ax,'on');
     
+    tic;
     for t = 1:numel(files)
-        t
+        if (mod(t,20)==0)
+            disp(sprintf('t = %d, runtime = %f',t,toc))
+        end
         cells = readmatrix(fullfile(files(t).folder,files(t).name));
         if (K6 > 0.0001)
             water = readmatrix(fullfile(files2(t).folder,files2(t).name));
@@ -117,7 +121,6 @@ function MakeVideoCluster()
         s.AlphaData = [a';a'];
         s.AlphaDataMapping = 'none';
         s.EdgeAlpha = 'flat';
-        colorcet('R2');
         if (K6 > 0.0001)
             if isempty(p)
                 p = scatter3(x2s,y2s,z2s,20,z2s,'filled');
@@ -133,4 +136,5 @@ function MakeVideoCluster()
         writeVideo(v, F.cdata);
     end
     close(v);
+    disp('Video finished')
 end
